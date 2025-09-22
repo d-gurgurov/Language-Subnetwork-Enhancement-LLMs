@@ -176,7 +176,7 @@ def format_translation_prompt(item: Dict, source_lang: str, target_lang: str, la
         opus_mapping = get_opus_lang_mapping()
         src_code = opus_mapping.get(source_lang, source_lang.split('_')[0])
         tgt_code = opus_mapping.get(target_lang, target_lang.split('_')[0])
-        source_text = item['translation'][src_code.split('_')[0]]
+        source_text = item['translation'][src_code]
     
     prompt = f"Translate this sentence into {target_name}: {source_text} Translation:" # {source_name} 
     return prompt
@@ -379,8 +379,6 @@ def evaluate_translation(model, source_lang: str, target_lang: str, sampling_par
         data = load_flores_data(source_lang, target_lang, split="devtest", max_samples=max_samples)
     else:  # opus
         data, was_reversed = load_opus_data(source_lang, target_lang, max_samples=max_samples)
-        if data is None:
-            return None
     
     # Format prompts
     prompts = [format_translation_prompt(item, source_lang, target_lang, lang_name_mapping, dataset_type) for item in data]
@@ -402,17 +400,10 @@ def evaluate_translation(model, source_lang: str, target_lang: str, sampling_par
             reference = item[f'sentence_{target_lang}']
         else:  # opus
             opus_mapping = get_opus_lang_mapping()
-            
-            # Get the correct reference based on whether direction was reversed
-            if was_reversed:
-                # If direction was reversed in loading, we need to get the source language reference
-                # because the data was swapped but we want the target language output
-                src_code = opus_mapping.get(original_source_lang, original_source_lang.split('_')[0])
-                reference = item['translation'][src_code]
-            else:
-                # Normal direction, get target language reference
-                tgt_code = opus_mapping.get(original_target_lang, original_target_lang.split('_')[0])
-                reference = item['translation'][tgt_code]
+
+            # Normal direction, get target language reference
+            tgt_code = opus_mapping.get(original_target_lang, original_target_lang.split('_')[0])
+            reference = item['translation'][tgt_code]
         
         candidate = response
         
