@@ -88,6 +88,9 @@ def load_opus_data(source_lang: str, target_lang: str, max_samples: Optional[int
     src_code = opus_mapping.get(source_lang, source_lang.split('_')[0])
     tgt_code = opus_mapping.get(target_lang, target_lang.split('_')[0])
     
+    data = None
+    reverse_direction = False
+    
     # Try the original direction first
     try:
         dataset = load_dataset("Helsinki-NLP/opus-100", f"{src_code}-{tgt_code}", split="test")
@@ -102,13 +105,7 @@ def load_opus_data(source_lang: str, target_lang: str, max_samples: Optional[int
         except ValueError:
             print("skipping opus")
             return None, None
-    
-    # If we used reverse direction, swap the source and target in each item
-    if reverse_direction:
-        for item in data:
-            translation = item['translation']
-            item['translation'] = {src_code: translation[tgt_code], tgt_code: translation[src_code]}
-        
+
     return data, reverse_direction
 
 def load_sib200_data(language: str, max_samples: Optional[int] = None):
